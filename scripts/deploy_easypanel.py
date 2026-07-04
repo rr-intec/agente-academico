@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
+import string
 import sys
 import urllib.error
 import urllib.parse
@@ -108,10 +110,18 @@ def main() -> int:
         print("updateDeploy:", _post("services.app.updateDeploy", {
             "projectName": PROJECT, "serviceName": SERVICE, "replicas": 1, "command": None, "zeroDowntime": True,
         }))
-        # Dominio público apuntando al puerto interno del agente.
+        # Dominio público apuntando al puerto interno del agente. El esquema de
+        # createDomain va APLANADO (campos al nivel raíz) y el proyecto/servicio se
+        # infieren de serviceDestination. `id` es un cuid generado por el cliente.
+        cid = "c" + "".join(secrets.choice(string.ascii_lowercase + string.digits) for _ in range(24))
         print("createDomain:", _post("domains.createDomain", {
-            "projectName": PROJECT, "serviceName": SERVICE,
-            "domain": {"host": DOMAIN, "https": True, "port": INTERNAL_PORT, "path": "/"},
+            "certificateResolver": "letsencrypt",
+            "host": DOMAIN, "https": True, "id": cid, "middlewares": [],
+            "path": "/", "wildcard": False, "destinationType": "service",
+            "serviceDestination": {
+                "path": "/", "port": INTERNAL_PORT, "protocol": "http",
+                "projectName": PROJECT, "serviceName": SERVICE,
+            },
         }))
 
     print("deployService:", _post("services.app.deployService", {
