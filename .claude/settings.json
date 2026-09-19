@@ -6,12 +6,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "git",
+            "command": "node",
             "args": [
-              "pull",
-              "--rebase",
-              "--autostash",
-              "--quiet"
+              "-e",
+              "const { execFileSync } = require(\"child_process\");\nconst g = (...a) => execFileSync(\"git\", a, { encoding: \"utf8\", stdio: [\"ignore\", \"pipe\", \"pipe\"] }).trim();\nlet m;\ntry {\n  const antes = g(\"rev-parse\", \"HEAD\");\n  g(\"pull\", \"--rebase\", \"--autostash\", \"--quiet\");\n  const ahora = g(\"rev-parse\", \"HEAD\");\n  if (antes === ahora) m = \"✓ Proyecto al día con GitHub (no había cambios nuevos).\";\n  else {\n    const l = g(\"log\", \"--format=%an: %s\", antes + \"..\" + ahora).split(\"\\n\");\n    m = \"✓ Se trajeron \" + l.length + \" cambio(s) nuevo(s) de GitHub:\\n\" + l.slice(0, 5).map((s) => \"  · \" + s).join(\"\\n\") + (l.length > 5 ? \"\\n  · …\" : \"\");\n  }\n} catch (e) {\n  m = \"⚠ No se pudo traer lo último de GitHub. Antes de cambiar nada, pídele a Claude que lo resuelva.\\n\" + String(e.stderr || e.message).trim().split(\"\\n\").slice(0, 3).join(\"\\n\");\n}\nconsole.log(JSON.stringify({ systemMessage: m, hookSpecificOutput: { hookEventName: \"SessionStart\", additionalContext: m } }));\n"
             ],
             "timeout": 60,
             "statusMessage": "Trayendo lo último de GitHub"
