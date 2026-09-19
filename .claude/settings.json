@@ -1,0 +1,23 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git",
+            "args": [
+              "pull",
+              "--rebase",
+              "--autostash",
+              "--quiet"
+            ],
+            "timeout": 60,
+            "statusMessage": "Trayendo lo último de GitHub"
+          }
+        ]
+      }
+    ]
+  }
+}
